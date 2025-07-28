@@ -173,4 +173,23 @@
         const cell = document.querySelector(`td[data-row="${r}"][data-col="${c}"]`);
         if (cell && !cell.classList.contains("selected")) {
           cell.classList.add("faded");
-          cell.style.backgroun
+          cell.style.backgroundColor = "#999";
+        }
+      }
+    }
+
+    simulateOthersSelection();
+
+    // Save action placeholder
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      alert("Selections saved (to be connected to a backend).");
+    });
+
+    // Timezone dropdown behavior placeholder
+    timezoneSelect.addEventListener("change", () => {
+      alert("Timezone adjustment to be implemented in a future version.");
+    });
+  </script>
+
+</body>
+</html>
