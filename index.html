@@ -2,184 +2,175 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Availability Grid</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Team Timezone Availability Grid</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 0 20px;
-      background-color: #f8f9fa;
-      color: #333;
+      margin: 0 80px;
+      background: #f5f9fc;
+      text-align: center;
     }
 
     h1 {
-      margin-top: 20px;
+      margin-top: 30px;
     }
 
-    select, button {
-      padding: 8px 12px;
-      margin: 10px;
+    select {
+      margin: 20px auto;
+      padding: 10px;
       font-size: 16px;
     }
 
-    .grid {
-      display: grid;
-      gap: 1px;
-      background-color: #b3d9ff;
+    #grid-container {
       overflow-x: auto;
+      margin-top: 20px;
+      border: 1px solid #cce6ff;
     }
 
-    .row {
-      display: contents;
+    table {
+      border-collapse: collapse;
+      margin: auto;
+      min-width: max-content;
     }
 
-    .cell {
-      width: 50px;
+    th, td {
+      border: 1px solid #cce6ff;
+      padding: 10px;
+      min-width: 60px;
       height: 30px;
-      background-color: #e6f2ff;
       text-align: center;
-      line-height: 30px;
+      background-color: #e6f3ff;
       cursor: pointer;
-      transition: background-color 0.2s ease;
     }
 
-    .cell:hover {
-      background-color: #d6eaff;
+    th.date-header {
+      background-color: #d4ecff;
+      cursor: default;
+    }
+
+    td:hover {
+      background-color: #d6f0ff !important;
     }
 
     .selected {
       background-color: var(--selected-color);
     }
 
-    .previous-selection {
+    .faded {
       opacity: 0.3;
     }
 
+    .time-label {
+      background-color: #f0f8ff;
+      font-weight: bold;
+      cursor: default;
+      min-width: 90px;
+    }
+
     #saveBtn {
-      margin: 20px;
-      background-color: #007bff;
+      margin: 30px auto;
+      padding: 12px 30px;
+      font-size: 16px;
+      background-color: #007acc;
       color: white;
       border: none;
       border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #saveBtn:hover {
+      background-color: #005f99;
     }
   </style>
 </head>
 <body>
-  <h1>Team Availability Grid</h1>
 
-  <label for="timezone">Choose Timezone:</label>
-  <select id="timezone">
+  <h1>Team Timezone Availability Grid</h1>
+  <select id="timezone-select">
     <option value="America/Vancouver">Vancouver (PST)</option>
     <option value="America/New_York">New York (EST)</option>
     <option value="Asia/Hong_Kong">Hong Kong (GMT+8)</option>
   </select>
 
-  <div id="grid" class="grid"></div>
+  <div id="grid-container">
+    <table id="availability-grid">
+      <!-- Content inserted by JavaScript -->
+    </table>
+  </div>
+
   <button id="saveBtn">Save</button>
 
   <script>
-    const timezoneSelect = document.getElementById("timezone");
-    const grid = document.getElementById("grid");
-    const saveBtn = document.getElementById("saveBtn");
+    const grid = document.getElementById("availability-grid");
+    const timezoneSelect = document.getElementById("timezone-select");
 
-    const colors = ["#ff6666", "#ff9900", "#66cc66", "#ffcc00"];
-    const userColor = colors[Math.floor(Math.random() * colors.length)];
-    document.documentElement.style.setProperty('--selected-color', userColor);
+    // Generate session color
+    const colors = ["#ff5c5c", "#ffaa00", "#33cc33", "#ffcc00"];
+    const sessionColor = colors[Math.floor(Math.random() * colors.length)];
+    document.documentElement.style.setProperty('--selected-color', sessionColor);
 
+    // Generate dates: 29 July – 31 August
     const startDate = new Date("2025-07-29");
     const endDate = new Date("2025-08-31");
-    const oneDay = 24 * 60 * 60 * 1000;
     const dates = [];
+    let tempDate = new Date(startDate);
 
-    for (let d = startDate; d <= endDate; d = new Date(d.getTime() + oneDay)) {
-      dates.push(new Date(d));
+    while (tempDate <= endDate) {
+      const day = tempDate.getDate();
+      const month = tempDate.getMonth() + 1;
+      dates.push(`${day}/${month}`);
+      tempDate.setDate(tempDate.getDate() + 1);
     }
 
-    const hours = Array.from({ length: 24 }, (_, i) => i + 1);
-
-    timezoneSelect.addEventListener("change", renderGrid);
-
-    let selection = new Set();
-    const previousSelections = new Set(); // Simulate other users' input
-
-    function renderGrid() {
-      const tz = timezoneSelect.value;
-      grid.innerHTML = "";
-      grid.style.gridTemplateColumns = `100px repeat(${dates.length}, 50px)`;
-
-      const headerRow = document.createElement("div");
-      headerRow.className = "row";
-
-      const timeHeader = document.createElement("div");
-      timeHeader.className = "cell";
-      timeHeader.textContent = "Time";
-      headerRow.appendChild(timeHeader);
-
-      dates.forEach(date => {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.textContent = `${date.getDate().toString().padStart(2, '0')}/${date.getMonth() + 1}`;
-        headerRow.appendChild(cell);
-      });
-
-      grid.appendChild(headerRow);
-
-      hours.forEach(hour => {
-        const row = document.createElement("div");
-        row.className = "row";
-
-        const timeLabel = document.createElement("div");
-        timeLabel.className = "cell";
-        let nextHour = hour + 1;
-        if (nextHour > 24) nextHour = 24;
-        timeLabel.textContent = `${hour.toString().padStart(2, '0')}:00 - ${nextHour.toString().padStart(2, '0')}:00`;
-        row.appendChild(timeLabel);
-
-        dates.forEach(date => {
-          const localTime = new Date(date);
-          localTime.setUTCHours(hour - 8); // PST as base
-
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          const key = `${date.toISOString().slice(0,10)}-${hour}`;
-
-          if (previousSelections.has(key)) {
-            cell.classList.add("previous-selection");
-            cell.style.backgroundColor = userColor;
-          }
-
-          if (selection.has(key)) {
-            cell.classList.add("selected");
-          }
-
-          cell.dataset.key = key;
-
-          cell.addEventListener("click", () => {
-            if (selection.has(key)) {
-              selection.delete(key);
-              cell.classList.remove("selected");
-            } else {
-              selection.add(key);
-              cell.classList.add("selected");
-            }
-          });
-
-          row.appendChild(cell);
-        });
-
-        grid.appendChild(row);
-      });
+    // 01:00 to 24:00 labels
+    const times = [];
+    for (let i = 1; i <= 24; i++) {
+      times.push(i.toString().padStart(2, "0") + ":00");
     }
 
-    saveBtn.addEventListener("click", () => {
-      alert("Selections saved!");
-      // Real implementation should POST to server or Firebase
+    // Header row (dates)
+    let headerRow = "<tr><th class='date-header time-label'></th>";
+    for (let date of dates) {
+      headerRow += `<th class='date-header'>${date}</th>`;
+    }
+    headerRow += "</tr>";
+    grid.innerHTML += headerRow;
+
+    // Time rows
+    for (let i = 0; i < times.length; i++) {
+      let row = `<tr><td class='time-label'>${times[i]}</td>`;
+      for (let j = 0; j < dates.length; j++) {
+        row += `<td data-row="${i}" data-col="${j}"></td>`;
+      }
+      row += "</tr>";
+      grid.innerHTML += row;
+    }
+
+    // Interaction logic
+    const cells = document.querySelectorAll("#availability-grid td:not(.time-label)");
+    const selectedCells = new Set();
+
+    cells.forEach(cell => {
+      cell.addEventListener("click", () => {
+        const key = `${cell.dataset.row}-${cell.dataset.col}`;
+        if (cell.classList.contains("selected")) {
+          cell.classList.remove("selected");
+          selectedCells.delete(key);
+        } else {
+          cell.style.backgroundColor = sessionColor;
+          cell.classList.add("selected");
+          selectedCells.add(key);
+        }
+      });
     });
 
-    renderGrid();
-  </script>
-</body>
-</html>
+    // Simulated other users’ availability (30% opacity)
+    function simulateOthersSelection() {
+      for (let i = 0; i < 40; i++) {
+        const r = Math.floor(Math.random() * times.length);
+        const c = Math.floor(Math.random() * dates.length);
+        const cell = document.querySelector(`td[data-row="${r}"][data-col="${c}"]`);
+        if (cell && !cell.classList.contains("selected")) {
+          cell.classList.add("faded");
+          cell.style.backgroun
