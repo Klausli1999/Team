@@ -89,7 +89,7 @@
     const userColor = colors[Math.floor(Math.random() * colors.length)];
     document.documentElement.style.setProperty('--selected-color', userColor);
 
-    const startDate = new Date();
+    const startDate = new Date("2025-07-29");
     const endDate = new Date("2025-08-31");
     const oneDay = 24 * 60 * 60 * 1000;
     const dates = [];
@@ -108,36 +108,39 @@
     function renderGrid() {
       const tz = timezoneSelect.value;
       grid.innerHTML = "";
-      grid.style.gridTemplateColumns = `100px repeat(${hours.length}, 50px)`;
+      grid.style.gridTemplateColumns = `100px repeat(${dates.length}, 50px)`;
 
       const headerRow = document.createElement("div");
       headerRow.className = "row";
-      const emptyCell = document.createElement("div");
-      emptyCell.className = "cell";
-      emptyCell.textContent = "Date";
-      headerRow.appendChild(emptyCell);
 
-      hours.forEach(hour => {
+      const timeHeader = document.createElement("div");
+      timeHeader.className = "cell";
+      timeHeader.textContent = "Time";
+      headerRow.appendChild(timeHeader);
+
+      dates.forEach(date => {
         const cell = document.createElement("div");
         cell.className = "cell";
-        cell.textContent = hour.toString().padStart(2, '0') + ":00";
+        cell.textContent = `${date.getDate().toString().padStart(2, '0')}/${date.getMonth() + 1}`;
         headerRow.appendChild(cell);
       });
 
       grid.appendChild(headerRow);
 
-      dates.forEach(date => {
+      hours.forEach(hour => {
         const row = document.createElement("div");
         row.className = "row";
 
-        const dateLabel = document.createElement("div");
-        dateLabel.className = "cell";
-        dateLabel.textContent = date.toISOString().slice(0, 10);
-        row.appendChild(dateLabel);
+        const timeLabel = document.createElement("div");
+        timeLabel.className = "cell";
+        let nextHour = hour + 1;
+        if (nextHour > 24) nextHour = 24;
+        timeLabel.textContent = `${hour.toString().padStart(2, '0')}:00 - ${nextHour.toString().padStart(2, '0')}:00`;
+        row.appendChild(timeLabel);
 
-        hours.forEach(hour => {
+        dates.forEach(date => {
           const localTime = new Date(date);
-          localTime.setUTCHours(hour - 8); // Vancouver as default reference
+          localTime.setUTCHours(hour - 8); // PST as base
 
           const cell = document.createElement("div");
           cell.className = "cell";
