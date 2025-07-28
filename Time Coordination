@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Availability Grid</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 20px;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    select, button {
+      padding: 8px 12px;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1px;
+      background-color: #b3d9ff;
+      overflow-x: auto;
+    }
+
+    .row {
+      display: contents;
+    }
+
+    .cell {
+      width: 50px;
+      height: 30px;
+      background-color: #e6f2ff;
+      text-align: center;
+      line-height: 30px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .cell:hover {
+      background-color: #d6eaff;
+    }
+
+    .selected {
+      background-color: var(--selected-color);
+    }
+
+    .previous-selection {
+      opacity: 0.3;
+    }
+
+    #saveBtn {
+      margin: 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Team Availability Grid</h1>
+
+  <label for="timezone">Choose Timezone:</label>
+  <select id="timezone">
+    <option value="America/Vancouver">Vancouver (PST)</option>
+    <option value="America/New_York">New York (EST)</option>
+    <option value="Asia/Hong_Kong">Hong Kong (GMT+8)</option>
+  </select>
+
+  <div id="grid" class="grid"></div>
+  <button id="saveBtn">Save</button>
+
+  <script>
+    const timezoneSelect = document.getElementById("timezone");
+    const grid = document.getElementById("grid");
+    const saveBtn = document.getElementById("saveBtn");
+
+    const colors = ["#ff6666", "#ff9900", "#66cc66", "#ffcc00"];
+    const userColor = colors[Math.floor(Math.random() * colors.length)];
+    document.documentElement.style.setProperty('--selected-color', userColor);
+
+    const startDate = new Date();
+    const endDate = new Date("2025-08-31");
+    const oneDay = 24 * 60 * 60 * 1000;
+    const dates = [];
+
+    for (let d = startDate; d <= endDate; d = new Date(d.getTime() + oneDay)) {
+      dates.push(new Date(d));
+    }
+
+    const hours = Array.from({ length: 24 }, (_, i) => i + 1);
+
+    timezoneSelect.addEventListener("change", renderGrid);
+
+    let selection = new Set();
+    const previousSelections = new Set(); // Simulate other users' input
+
+    function renderGrid() {
+      const tz = timezoneSelect.value;
+      grid.innerHTML = "";
+      grid.style.gridTemplateColumns = `100px repeat(${hours.length}, 50px)`;
+
+      const headerRow = document.createElement("div");
+      headerRow.className = "row";
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "cell";
+      emptyCell.textContent = "Date";
+      headerRow.appendChild(emptyCell);
+
+      hours.forEach(hour => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = hour.toString().padStart(2, '0') + ":00";
+        headerRow.appendChild(cell);
+      });
+
+      grid.appendChild(headerRow);
+
+      dates.forEach(date => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const dateLabel = document.createElement("div");
+        dateLabel.className = "cell";
+        dateLabel.textContent = date.toISOString().slice(0, 10);
+        row.appendChild(dateLabel);
+
+        hours.forEach(hour => {
+          const localTime = new Date(date);
+          localTime.setUTCHours(hour - 8); // Vancouver as default reference
+
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const key = `${date.toISOString().slice(0,10)}-${hour}`;
+
+          if (previousSelections.has(key)) {
+            cell.classList.add("previous-selection");
+            cell.style.backgroundColor = userColor;
+          }
+
+          if (selection.has(key)) {
+            cell.classList.add("selected");
+          }
+
+          cell.dataset.key = key;
+
+          cell.addEventListener("click", () => {
+            if (selection.has(key)) {
+              selection.delete(key);
+              cell.classList.remove("selected");
+            } else {
+              selection.add(key);
+              cell.classList.add("selected");
+            }
+          });
+
+          row.appendChild(cell);
+        });
+
+        grid.appendChild(row);
+      });
+    }
+
+    saveBtn.addEventListener("click", () => {
+      alert("Selections saved!");
+      // Real implementation should POST to server or Firebase
+    });
+
+    renderGrid();
+  </script>
+</body>
+</html>
